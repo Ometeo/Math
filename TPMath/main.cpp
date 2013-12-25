@@ -4,24 +4,23 @@
 #include <stdio.h>
 #include <vector>
 #include <iostream>
+#include <math.h>
 
 using namespace std;
 
-int x0, y0;
 double c;
 bool drawPoly;
 
 
 vector<POINT> windowsPoints;
 vector<POINT> polygonPoints;
-vector<POINT> test;
 
 
 void init(int argc, char **argv);
 void display();
 void keyboard(unsigned char button, int x, int y);
 void mouse(int mouseButton, int state, int x, int y);
-
+void VectorNormal(vector<POINT> polygonPoints, int i);
 void drawPoints(vector<POINT> pointVector);
 bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p);
 
@@ -85,34 +84,17 @@ void display()
     {
         for(int i = 1; i < polygonPoints.size(); i++)
         {
-                float X;
-                float Y;
-                Y = polygonPoints[i-1].y + ((polygonPoints[i].y)-(polygonPoints[i-1].y))*0.5;
-				X = polygonPoints[i-1].x + ((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5;
-
-                cout << X << " "<< Y << endl;
-                cout << polygonPoints[i-1].x << " "<< polygonPoints[i-1].y << endl;
-                glBegin(GL_LINES);
-                    glVertex2i(polygonPoints[i-1].x, polygonPoints[i-1].y);
-                    glVertex2i(polygonPoints[i].x, polygonPoints[i].y);
-                glEnd();
-                glColor3f(0.0,0.0,1.0);
-                glBegin(GL_POINTS);
-                glVertex2i(X,Y);
-                glVertex2i(X+((polygonPoints[i].y)-(polygonPoints[i-1].y))*-0.5, Y+((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5);
-                glEnd();
-                glBegin(GL_LINES);
-                    glVertex2i(X,Y);
-                    glVertex2i(X+((polygonPoints[i].y)-(polygonPoints[i-1].y))*-0.5, Y+((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5);
-                glEnd();
-                glColor3f(0.0, 1.0, 0.0);
+            glBegin(GL_LINES);
+                glVertex2i(polygonPoints[i-1].x, polygonPoints[i-1].y);
+                glVertex2i(polygonPoints[i].x, polygonPoints[i].y);
+            glEnd();
+            VectorNormal(polygonPoints,i);
         }
 
         glBegin(GL_LINES);
             glVertex2i(polygonPoints[polygonPoints.size()-1].x, polygonPoints[polygonPoints.size()-1].y);
             glVertex2i(polygonPoints[0].x, polygonPoints[0].y);
         glEnd();
-
     }
 
     glFlush();
@@ -191,4 +173,43 @@ void drawPoints(vector<POINT> pointVector)
 bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p)
 {
     return false;
+}
+
+void VectorNormal(vector<POINT> polygonPoints,int i)
+{
+        float X, Y, distance, distanceX, distanceY, vectorNormalY, vectorNormalX;
+
+        Y = polygonPoints[i-1].y + ((polygonPoints[i].y)-(polygonPoints[i-1].y))*0.5;
+        X = polygonPoints[i-1].x + ((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5;
+        vectorNormalY = ((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5;
+        vectorNormalX = ((polygonPoints[i].y)-(polygonPoints[i-1].y))*-0.5;
+
+        distanceY = pow((( Y+((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5)-(Y)),2);
+        distanceX = pow((( X+((polygonPoints[i].y)-(polygonPoints[i-1].y))*-0.5)-(X)),2);
+        distance = sqrt(distanceX + distanceY);
+
+        glColor3f(0.0,0.0,1.0);
+        glBegin(GL_POINTS);
+        glVertex2i(X,Y);
+        glVertex2i(X+vectorNormalX, Y+vectorNormalY);
+        glEnd();
+
+
+        cout << distance << endl;
+
+        glBegin(GL_LINES);
+            glVertex2i(X,Y);
+        glVertex2i(X+vectorNormalX, Y+vectorNormalY);
+        glEnd();
+
+        glColor3f(1.0,0.0,0.0);
+        glBegin(GL_POINTS);
+        glVertex2i(X,Y);
+        glVertex2i(X-vectorNormalX, Y-vectorNormalY);
+        glEnd();
+        glBegin(GL_LINES);
+            glVertex2i(X,Y);
+            glVertex2i(X-vectorNormalX, Y-vectorNormalY);
+        glEnd();
+        glColor3f(0.0, 1.0, 0.0);
 }
