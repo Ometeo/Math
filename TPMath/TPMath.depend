@@ -240,3 +240,20 @@
 	<iostream>
 	<math.h>
 
+1388094317 source:c:\users\jonat_000\documents\github\math\tpmath\main.cpp
+	<windows.h>
+	<glut.h>
+	<stdlib.h>
+	<stdio.h>
+	<vector>
+	<iostream>
+	<math.h>
+
+1341010374 e:\program files (x86)\codeblocks\mingw\include\math.h
+	<_mingw.h>
+
+1386020112 e:\program files (x86)\codeblocks\mingw\include\glut.h
+	<windows.h>
+	<GL/gl.h>
+	<GL/glu.h>
+
