@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <glut.h>
+#include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -18,6 +18,7 @@ vector<POINT> normals;
 
 
 void init(int argc, char **argv);
+bool isClockwise(vector<POINT>);
 void display();
 void keyboard(unsigned char button, int x, int y);
 void mouse(int mouseButton, int state, int x, int y);
@@ -26,9 +27,6 @@ void drawPoints(vector<POINT> pointVector);
 bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p);
 
 float DotProduct(float x1, float x2, float y1, float y2);
-
-
-
 
 int main (int argc, char **argv)
 {
@@ -58,6 +56,24 @@ void init(int argc, char **argv)
     glPointSize(2.0);
 }
 
+/**
+* This function returns true if [poly] is clockwise
+*/
+bool isClockwise(vector<POINT> poly)
+{
+    int sum = 0;
+    for(int i = 0; i < poly.size(); i++)
+    {
+        int x1 = poly[i].x;
+        int y1 = poly[i].y;
+        int x2 = poly[(i + 1) % poly.size()].x;
+        int y2 = poly[(i + 1) % poly.size()].y;
+
+        sum += (x2-x1)*(y2+y1);
+    }
+    return sum > 0;
+}
+
 void display()
 {
     glClear(GL_COLOR_BUFFER_BIT);
@@ -84,26 +100,25 @@ void display()
     drawPoints(polygonPoints);
     if(polygonPoints.size() > 1)
     {
-        for(int i = 1; i < polygonPoints.size(); i++)
+        POINT pt1, pt2;
+        for(int i = 0; i < polygonPoints.size(); i++)
         {
+            pt1 = polygonPoints[i];
+            pt2 = polygonPoints[(i + 1) % polygonPoints.size()];
             glBegin(GL_LINES);
-                glVertex2i(polygonPoints[i-1].x, polygonPoints[i-1].y);
-                glVertex2i(polygonPoints[i].x, polygonPoints[i].y);
+                glVertex2i(pt1.x, pt1.y);
+                glVertex2i(pt2.x, pt2.y);
             glEnd();
 
         }
-
-
-        glBegin(GL_LINES);
-            glVertex2i(polygonPoints[polygonPoints.size()-1].x, polygonPoints[polygonPoints.size()-1].y);
-            glVertex2i(polygonPoints[0].x, polygonPoints[0].y);
-        glEnd();
     }
 
     if(polygonPoints.size() > 2)
     {
         VectorNormal(polygonPoints);
     }
+
+    cout << "polygon isClockwise : " << isClockwise(polygonPoints) << endl;
 
     glFlush();
 }
@@ -179,7 +194,6 @@ void drawPoints(vector<POINT> pointVector)
 
 
 
-
 bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p)
 {
     return false;
@@ -187,47 +201,32 @@ bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p)
 
 void VectorNormal(vector<POINT> polygonPoints)
 {
-        bool clockwise;
+        bool clockwise = isClockwise(polygonPoints);
         float X, Y, distance, distanceX, distanceY, vectorNormalY, vectorNormalX;
 
-        float x1 = polygonPoints[1].x - polygonPoints[0].x;
-        float x2 = polygonPoints[2].x - polygonPoints[1].x;
+        POINT pt1, pt2;
 
-        float y1 = polygonPoints[1].y - polygonPoints[0].y;
-        float y2 = polygonPoints[2].y - polygonPoints[1].y;
-
-        float test = DotProduct(x1,x2,y1,y2);
-
-        cout << x1 << endl;
-        cout << x2 << endl;
-        cout << y1 << endl;
-        cout << y2 << endl;
-
-        cout << test << endl;
-
-
-
-
-        for(int i = 1; i < polygonPoints.size(); i++)
+        for(int i = 0; i < polygonPoints.size(); i++)
         {
-            Y = polygonPoints[i-1].y + ((polygonPoints[i].y)-(polygonPoints[i-1].y))*0.5;
-            X = polygonPoints[i-1].x + ((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5;
+            pt1 = polygonPoints[i];
+            pt2 = polygonPoints[(i + 1) % polygonPoints.size()];
 
+            Y = pt1.y + ((pt2.y)-(pt1.y))*0.5;
+            X = pt1.x + ((pt2.x)-(pt1.x))*0.5;
 
-            if(test < 0)
+            if(clockwise)
             {
-                vectorNormalY = ((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5;
-                vectorNormalX = ((polygonPoints[i].y)-(polygonPoints[i-1].y))*-0.5;
+                vectorNormalY = ((pt2.x)-(pt1.x))*0.5;
+                vectorNormalX = ((pt2.y)-(pt1.y))*-0.5;
             }
             else
             {
-                vectorNormalY = ((polygonPoints[i].x)-(polygonPoints[i-1].x))*-0.5;
-                vectorNormalX = ((polygonPoints[i].y)-(polygonPoints[i-1].y))*0.5;
+                vectorNormalY = ((pt2.x)-(pt1.x))*-0.5;
+                vectorNormalX = ((pt2.y)-(pt1.y))*0.5;
             }
 
-
-            distanceY = pow((( Y+((polygonPoints[i].x)-(polygonPoints[i-1].x))*0.5)-(Y)),2);
-            distanceX = pow((( X+((polygonPoints[i].y)-(polygonPoints[i-1].y))*-0.5)-(X)),2);
+            distanceY = pow((( Y+((pt2.x)-(pt1.x))*0.5)-(Y)),2);
+            distanceX = pow((( X+((pt2.y)-(pt1.y))*-0.5)-(X)),2);
             distance = sqrt(distanceX + distanceY);
 
             glColor3f(0.0,0.0,1.0);
@@ -235,10 +234,6 @@ void VectorNormal(vector<POINT> polygonPoints)
             glVertex2i(X,Y);
             glVertex2i(X+vectorNormalX, Y+vectorNormalY);
             glEnd();
-
-
-
-            //cout << distance << endl;
 
             glBegin(GL_LINES);
                 glVertex2i(X,Y);
@@ -255,42 +250,6 @@ void VectorNormal(vector<POINT> polygonPoints)
            //     glVertex2i(X-vectorNormalX, Y-vectorNormalY);
            // glEnd();
         }
-
-        Y = polygonPoints[polygonPoints.size()-1].y + ((polygonPoints[0].y)-(polygonPoints[polygonPoints.size()-1].y))*0.5;
-        X = polygonPoints[polygonPoints.size()-1].x + ((polygonPoints[0].x)-(polygonPoints[polygonPoints.size()-1].x))*0.5;
-        vectorNormalY = ((polygonPoints[0].x)-(polygonPoints[polygonPoints.size()-1].x))*0.5;
-        vectorNormalX = ((polygonPoints[0].y)-(polygonPoints[polygonPoints.size()-1].y))*-0.5;
-
-        distanceY = pow((( Y+((polygonPoints[0].x)-(polygonPoints[polygonPoints.size()-1].x))*0.5)-(Y)),2);
-        distanceX = pow((( X+((polygonPoints[0].y)-(polygonPoints[polygonPoints.size()-1].y))*-0.5)-(X)),2);
-        distance = sqrt(distanceX + distanceY);
-
-        glColor3f(0.0,0.0,1.0);
-        glBegin(GL_POINTS);
-            glVertex2i(X,Y);
-            glVertex2i(X+vectorNormalX, Y+vectorNormalY);
-        glEnd();
-
-
-
-        //cout << distance << endl;
-
-        glBegin(GL_LINES);
-            glVertex2i(X,Y);
-            glVertex2i(X+vectorNormalX, Y+vectorNormalY);
-        glEnd();
-
-        //glColor3f(1.0,0.0,0.0);
-        //glBegin(GL_POINTS);
-        //    glVertex2i(X,Y);
-        //    glVertex2i(X-vectorNormalX, Y-vectorNormalY);
-        //glEnd();
-        //glBegin(GL_LINES);
-        //    glVertex2i(X,Y);
-        //    glVertex2i(X-vectorNormalX, Y-vectorNormalY);
-        //glEnd();
-
-
 }
 
 float DotProduct(float x1, float x2, float y1, float y2)

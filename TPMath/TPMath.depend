@@ -257,3 +257,12 @@
 	<GL/gl.h>
 	<GL/glu.h>
 
+1388438541 source:c:\users\thierry\documents\github\math\tpmath\main.cpp
+	<windows.h>
+	<GL/glut.h>
+	<stdlib.h>
+	<stdio.h>
+	<vector>
+	<iostream>
+	<math.h>
+
