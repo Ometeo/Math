@@ -240,9 +240,9 @@
 	<iostream>
 	<math.h>
 
-1388094317 source:c:\users\jonat_000\documents\github\math\tpmath\main.cpp
+1388489866 source:c:\users\jonat_000\documents\github\math\tpmath\main.cpp
 	<windows.h>
-	<glut.h>
+	<GL/glut.h>
 	<stdlib.h>
 	<stdio.h>
 	<vector>

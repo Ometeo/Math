@@ -25,6 +25,7 @@ void mouse(int mouseButton, int state, int x, int y);
 void VectorNormal(vector<POINT> polygonPoints);
 void drawPoints(vector<POINT> pointVector);
 bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p);
+float VectorNorm(float x1, float x2, float y1, float y2);
 
 float DotProduct(float x1, float x2, float y1, float y2);
 
@@ -113,12 +114,12 @@ void display()
         }
     }
 
-    if(polygonPoints.size() > 2)
+    if(windowsPoints.size() > 2)
     {
-        VectorNormal(polygonPoints);
+        VectorNormal(windowsPoints);
     }
 
-    cout << "polygon isClockwise : " << isClockwise(polygonPoints) << endl;
+    cout << "polygon isClockwise : " << isClockwise(windowsPoints) << endl;
 
     glFlush();
 }
@@ -204,6 +205,8 @@ void VectorNormal(vector<POINT> polygonPoints)
         bool clockwise = isClockwise(polygonPoints);
         float X, Y, distance, distanceX, distanceY, vectorNormalY, vectorNormalX;
 
+        float norm;
+
         POINT pt1, pt2;
 
         for(int i = 0; i < polygonPoints.size(); i++)
@@ -216,20 +219,25 @@ void VectorNormal(vector<POINT> polygonPoints)
 
             if(clockwise)
             {
-                vectorNormalY = ((pt2.x)-(pt1.x))*0.5;
-                vectorNormalX = ((pt2.y)-(pt1.y))*-0.5;
+                vectorNormalX = ((pt2.y)-(pt1.y));
+                vectorNormalY = (-((pt2.x)-(pt1.x)));
             }
             else
             {
-                vectorNormalY = ((pt2.x)-(pt1.x))*-0.5;
-                vectorNormalX = ((pt2.y)-(pt1.y))*0.5;
+                vectorNormalX = (-((pt2.y)-(pt1.y)));
+                vectorNormalY = ((pt2.x)-(pt1.x));
             }
 
-            distanceY = pow((( Y+((pt2.x)-(pt1.x))*0.5)-(Y)),2);
-            distanceX = pow((( X+((pt2.y)-(pt1.y))*-0.5)-(X)),2);
-            distance = sqrt(distanceX + distanceY);
+            norm = VectorNorm(vectorNormalX, X, vectorNormalY, Y);
+            cout << norm << endl;
 
-            glColor3f(0.0,0.0,1.0);
+            vectorNormalX /= norm;
+            vectorNormalY /= norm;
+
+            vectorNormalX *= 10;
+            vectorNormalY *= 10;
+
+            glColor3f(1.0,0.0,0.0);
             glBegin(GL_POINTS);
             glVertex2i(X,Y);
             glVertex2i(X+vectorNormalX, Y+vectorNormalY);
@@ -240,20 +248,39 @@ void VectorNormal(vector<POINT> polygonPoints)
                 glVertex2i(X+vectorNormalX, Y+vectorNormalY);
             glEnd();
 
-           // glColor3f(1.0,0.0,0.0);
-           // glBegin(GL_POINTS);
-           // glVertex2i(X,Y);
-           // glVertex2i(X-vectorNormalX, Y-vectorNormalY);
-           // glEnd();
-           // glBegin(GL_LINES);
-           //     glVertex2i(X,Y);
-           //     glVertex2i(X-vectorNormalX, Y-vectorNormalY);
-           // glEnd();
+           /* glColor3f(1.0,0.0,0.0);
+            glBegin(GL_POINTS);
+            glVertex2i(X,Y);
+            glVertex2i(X-vectorNormalX, Y-vectorNormalY);
+            glEnd();
+            glBegin(GL_LINES);
+                glVertex2i(X,Y);
+                glVertex2i(X-vectorNormalX, Y-vectorNormalY);
+           glEnd();*/
         }
 }
 
+
+/** \brief Produit Scalaire
+ * x1,x2.. ne sont pas les coordonnées de point, mais les valeurs du vecteur!
+ * \param
+ * \param
+ * \return
+ *
+ */
 float DotProduct(float x1, float x2, float y1, float y2)
 {
     return x1*x2 + y1*y2;
+}
 
+/** \brief Methode retournant la norme d'un vecteur
+ * x1,x2.... coordonnées des points composant le vecteur.
+ * \param
+ * \param
+ * \return
+ *
+ */
+float VectorNorm(float x1, float x2, float y1, float y2)
+{
+    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
 }
