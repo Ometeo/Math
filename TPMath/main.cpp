@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <GL/glut.h>
+#include <glut.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -143,7 +143,7 @@ void display()
             glVertex2i(pt1.x, pt1.y);
             glVertex2i(pt2.x, pt2.y);
             glEnd();
-
+            cut()
         }
     }
     if(drawingNormals)
@@ -351,6 +351,7 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
             {
                 if(cut(S,polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
                 {
+                    cout <<" ok "<<endl;
                     I = intersect(S, polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
                     PS.push_back(I);
                 }
@@ -376,13 +377,29 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
 //Retourne un booléen suivant l'intersection possible entre le côté [currentPolyPoint otherPolyPoint] du polygone et le bord prolongé (une droite) (windowPoint1 windowPoint2) de la fenêtre.
 bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
-    return false;
+    float a1, a2;
+
+    a1 = (otherPolyPoint.y - currentPolyPoint.y) / (otherPolyPoint.x - currentPolyPoint.x);
+    a2 = (windowPoint1.y - windowPoint2.y) / (windowPoint1.x - windowPoint2.x);
+
+    if(a1 = a2)
+        return false;
+    else
+       return true;
 }
 
 //retournant le point d'intersection [[currentPolyPoint otherPolyPoint] inter (windowPoint1 windowPoint2)
 POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
     POINT p;
+    float a1, a2, b1, b2, commun;
+
+    a1 = (otherPolyPoint.y - currentPolyPoint.y) / (otherPolyPoint.x - currentPolyPoint.x);
+    a2 = (windowPoint1.y - windowPoint2.y) / (windowPoint1.x - windowPoint2.x);
+    b1 = currentPolyPoint.y - (a1 * currentPolyPoint.x);
+    b2 = windowPoint1.y - (a2 * windowPoint1.x);
+    commun = (b2-b1)/(a1-a2);
+    if(commun => x1 && commun =< x2 && commun => x3 && commun =< x4)
     return p;
 }
 
@@ -391,5 +408,6 @@ bool visible(POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
     return false;
 }
+
 
 
