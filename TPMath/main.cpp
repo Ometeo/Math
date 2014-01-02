@@ -153,6 +153,9 @@ void display()
     if(polygonPointsWindowed.size() > 1)
     {
         POINT pt1, pt2;
+
+        cout << "size : " << polygonPointsWindowed.size() << endl;
+
         for(unsigned int i = 0; i < polygonPointsWindowed.size(); i++)
         {
             pt1 = polygonPointsWindowed[i];
@@ -163,6 +166,9 @@ void display()
             glEnd();
         }
     }
+
+
+
 
 //    cout << "polygon isClockwise : " << isClockwise(windowsPoints) << endl;
 
@@ -393,6 +399,7 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
                 I = intersect(S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
                 PS.push_back(I);
             }
+
             polygonPointsWindowed = PS;
         }
     }
@@ -439,6 +446,7 @@ bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT
 //retournant le point d'intersection [[currentPolyPoint otherPolyPoint] inter (windowPoint1 windowPoint2)
 POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
+    cout << "intersect" << endl;
     POINT p;
     float a1, a2, b1, b2, X, Y;
 
@@ -447,36 +455,38 @@ POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1
     b1 = currentPolyPoint.y - (a1 * currentPolyPoint.x);
     b2 = windowPoint1.y - (a2 * windowPoint1.x);
     X = (b2-b1)/(a1-a2);
-    Y = (a1-a2)/(b2-b1);
-
-//    p.x = X;
-//    p.y = Y;
-//
-//    return p;
-
-    float mA, mB, mC, mD, iA, iB, iC, iD, multi, xB, yB;
 
 
+    Y = a1 * X + b1 ;
 
-    mA = otherPolyPoint.x - currentPolyPoint.x;
-    mB = windowPoint1.x - windowPoint2.x;
-    mC = otherPolyPoint.y - currentPolyPoint.y;
-    mD = windowPoint1.y - windowPoint2.y;
-
-    xB = windowPoint1.x - currentPolyPoint.x;
-    yB = windowPoint1.y - currentPolyPoint.y;
-
-    multi =1 /( (mA * mD) - (mB * mC));
-
-    iA = mD * multi;
-    iB = -mB * multi;
-    iC = -mC * multi;
-    iD = mA * multi;
-
-    p.x = iA* xB + iB * yB;
-    p.y = iC * xB + iD * yB;
+    p.x = X;
+    p.y = Y;
 
     return p;
+//
+//    float mA, mB, mC, mD, iA, iB, iC, iD, multi, xB, yB;
+//
+//
+//
+//    mA = otherPolyPoint.x - currentPolyPoint.x;
+//    mB = windowPoint1.x - windowPoint2.x;
+//    mC = otherPolyPoint.y - currentPolyPoint.y;
+//    mD = windowPoint1.y - windowPoint2.y;
+//
+//    xB = windowPoint1.x - currentPolyPoint.x;
+//    yB = windowPoint1.y - currentPolyPoint.y;
+//
+//    multi =1 /( (mA * mD) - (mB * mC));
+//
+//    iA = mD * multi;
+//    iB = -mB * multi;
+//    iC = -mC * multi;
+//    iD = mA * multi;
+//
+//    p.x = iA* xB + iB * yB;
+//    p.y = iC * xB + iD * yB;
+//
+//    return p;
 
 }
 
