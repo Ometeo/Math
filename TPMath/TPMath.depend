@@ -231,9 +231,9 @@
 	<_mingw.h>
 	<stddef.h>
 
-1388001655 source:c:\users\pascal\documents\github\math\tpmath\main.cpp
+1388610492 source:c:\users\pascal\documents\github\math\tpmath\main.cpp
 	<windows.h>
-	<glut.h>
+	<GL/glut.h>
 	<stdlib.h>
 	<stdio.h>
 	<vector>
