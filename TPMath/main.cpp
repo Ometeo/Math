@@ -54,7 +54,7 @@ bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT
 POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
 
 //Retourne un booléen si S est visible par rapport à (windowPoint1 windowPoint2
-bool visible(POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2);
+bool visible(vec normal,POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2);
 
 
 
@@ -143,13 +143,28 @@ void display()
             glVertex2i(pt1.x, pt1.y);
             glVertex2i(pt2.x, pt2.y);
             glEnd();
-            cut()
         }
     }
     if(drawingNormals)
         drawNormals(windowsNormals);
 
-    cout << "polygon isClockwise : " << isClockwise(windowsPoints) << endl;
+    glColor3f(1.0,1.0,1.0);
+    drawPoints(polygonPointsWindowed);
+    if(polygonPointsWindowed.size() > 1)
+    {
+        POINT pt1, pt2;
+        for(unsigned int i = 0; i < polygonPointsWindowed.size(); i++)
+        {
+            pt1 = polygonPointsWindowed[i];
+            pt2 = polygonPointsWindowed[(i + 1) % polygonPointsWindowed.size()];
+            glBegin(GL_LINES);
+            glVertex2i(pt1.x, pt1.y);
+            glVertex2i(pt2.x, pt2.y);
+            glEnd();
+        }
+    }
+
+//    cout << "polygon isClockwise : " << isClockwise(windowsPoints) << endl;
 
     glFlush();
 }
@@ -171,6 +186,12 @@ void mouse(int button,int state,int x,int y)
                 VectorNormal(windowsPoints);
             }
         }
+
+        if(polygonPoints.size() > 1 && windowsPoints.size() > 2)
+        {
+            SutherlandHodgman(polygonPoints, windowsPoints);
+        }
+
 
         display();
     }
@@ -334,15 +355,17 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
 {
     vector<POINT> PS;
 
-
     POINT F;
     POINT S;
     POINT I;
-    for(unsigned int i = 0; i < windowsPoints.size(); i++)
+
+    cout << "algo stherland hodgman " << endl;
+    for(unsigned int i = 0; i < windowsPoints.size() + 1; i++)
     {
         PS.clear();
-        for(unsigned int j = 0; j < polygonPoints.size() - 1; j++)
+        for(unsigned int j = 0; j < polygonPoints.size(); j++)
         {
+            cout << "i : " << i << ", j : " << j << endl;
             if(j == 0)
             {
                 F = polygonPoints[j];
@@ -351,14 +374,15 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
             {
                 if(cut(S,polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
                 {
-                    cout <<" ok "<<endl;
+                    cout << "cut" << endl;
                     I = intersect(S, polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
                     PS.push_back(I);
                 }
             }
             S = polygonPoints[j];
-            if(visible(S, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
+            if(visible(windowsNormals[i], S, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
             {
+                cout << "visible" << endl;
                 PS.push_back(S);
             }
         }
@@ -377,37 +401,109 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
 //Retourne un booléen suivant l'intersection possible entre le côté [currentPolyPoint otherPolyPoint] du polygone et le bord prolongé (une droite) (windowPoint1 windowPoint2) de la fenêtre.
 bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
-    float a1, a2;
+    cout << "in cut" << endl;
+
+    float a1, a2, b1, b2, commun;
 
     a1 = (otherPolyPoint.y - currentPolyPoint.y) / (otherPolyPoint.x - currentPolyPoint.x);
-    a2 = (windowPoint1.y - windowPoint2.y) / (windowPoint1.x - windowPoint2.x);
+    a2 = (windowPoint2.y - windowPoint1.y) / (windowPoint2.x - windowPoint1.x);
 
-    if(a1 = a2)
-        return false;
-    else
-       return true;
+    b1 = currentPolyPoint.y - (a1 * currentPolyPoint.x);
+    b2 = windowPoint1.y - (a2 * windowPoint1.x);
+
+
+    if(a1 != a2)
+    {
+        cout << "a1 ! a2" << endl;
+        commun = (b2-b1)/(a1-a2);
+        cout << "x1 = " << currentPolyPoint.x << " x2 = " << otherPolyPoint.x << " commun = " << commun << endl;
+
+        if(currentPolyPoint.x < otherPolyPoint.x)
+            if((currentPolyPoint.x <= commun && commun <= otherPolyPoint.x))
+            {
+                cout << "commun1" << endl;
+                return true;
+            }
+        else
+            if((otherPolyPoint.x <= commun && commun <= currentPolyPoint.x))
+            {
+                cout << "commun2" << endl;
+                return true;
+            }
+
+    }
+
+    return false;
 }
 
 //retournant le point d'intersection [[currentPolyPoint otherPolyPoint] inter (windowPoint1 windowPoint2)
 POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
     POINT p;
-    float a1, a2, b1, b2, commun;
+    float a1, a2, b1, b2, X, Y;
 
     a1 = (otherPolyPoint.y - currentPolyPoint.y) / (otherPolyPoint.x - currentPolyPoint.x);
     a2 = (windowPoint1.y - windowPoint2.y) / (windowPoint1.x - windowPoint2.x);
     b1 = currentPolyPoint.y - (a1 * currentPolyPoint.x);
     b2 = windowPoint1.y - (a2 * windowPoint1.x);
-    commun = (b2-b1)/(a1-a2);
-    if(commun => x1 && commun =< x2 && commun => x3 && commun =< x4)
+    X = (b2-b1)/(a1-a2);
+    Y = (a1-a2)/(b2-b1);
+
+//    p.x = X;
+//    p.y = Y;
+//
+//    return p;
+
+    float mA, mB, mC, mD, iA, iB, iC, iD, multi, xB, yB;
+
+
+
+    mA = otherPolyPoint.x - currentPolyPoint.x;
+    mB = windowPoint1.x - windowPoint2.x;
+    mC = otherPolyPoint.y - currentPolyPoint.y;
+    mD = windowPoint1.y - windowPoint2.y;
+
+    xB = windowPoint1.x - currentPolyPoint.x;
+    yB = windowPoint1.y - currentPolyPoint.y;
+
+    multi =1 /( (mA * mD) - (mB * mC));
+
+    iA = mD * multi;
+    iB = -mB * multi;
+    iC = -mC * multi;
+    iD = mA * multi;
+
+    p.x = iA* xB + iB * yB;
+    p.y = iC * xB + iD * yB;
+
     return p;
+
 }
 
 //Retourne un booléen si S est visible par rapport à (windowPoint1 windowPoint2
-bool visible(POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2)
+bool visible(vec normal, POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
-    return false;
+    POINT normalVector;
+    normalVector.x = normal.x2 - normal.x1;
+    normalVector.y = normal.y2 - normal.y1;
+
+    POINT pointToWindowVector;
+    pointToWindowVector.x = currentPolyPoint.x - windowPoint1.x;
+    pointToWindowVector.y = currentPolyPoint.y - windowPoint1.y;
+
+
+    cout << "dot product : " << DotProduct(normalVector.x, pointToWindowVector.x, normalVector.y, pointToWindowVector.y) << endl;
+
+    if(0 <= DotProduct(normalVector.x, pointToWindowVector.x, normalVector.y, pointToWindowVector.y))
+    {
+        return true;
+    }
+    else
+        return false;
 }
+
+
+
 
 
 
