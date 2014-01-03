@@ -417,13 +417,8 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
                 I = intersect(windowsNormals[i], S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
                 PS.push_back(I);
             }
-<<<<<<< HEAD
-
-            polygonPointsWindowed = PS;
-=======
             for (int numP = 0; numP < PS.size(); numP++)
                 polygonPointsWindowed.push_back(PS[numP]);
->>>>>>> [Upd] Correction de cut, Visible et Intersec
         }
         for (int numP = 0; numP < polyPointsInside.size(); numP++)
         {
