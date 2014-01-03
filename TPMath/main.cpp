@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <glut.h>
+#include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <vector>
@@ -20,7 +20,15 @@ struct vec {
     float y2;
 };
 
+struct vect {
+    float x;
+    float y;
+};
 
+struct PointWithCnt {
+    POINT p;
+    int nb;
+};
 
 vector<POINT> windowsPoints;
 vector<POINT> polygonPoints;
@@ -39,23 +47,27 @@ void drawPoints(vector<POINT> pointVector);
 bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p);
 float VectorNorm(float x1, float x2, float y1, float y2);
 
+float DotProduct(vect v1, vect v2);
 float DotProduct(float x1, float x2, float y1, float y2);
 void drawNormals(vector<vec> normals);
 
+// Ajoute ou retire le point p à la liste points
+void addSpecialPoint(vector<PointWithCnt> &points, POINT p);
 
 //Algo sutherland-Hodgman
 void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints);
 
 
 //Retourne un booléen suivant l'intersection possible entre le côté [currentPolyPoint otherPolyPoint] du polygone et le bord prolongé (une droite) (windowPoint1 windowPoint2) de la fenêtre.
-bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
+bool cut(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
 
 //retournant le point d'intersection [[currentPolyPoint otherPolyPoint] inter (windowPoint1 windowPoint2)
-POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
+POINT intersect(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
 
 //Retourne un booléen si S est visible par rapport à (windowPoint1 windowPoint2
 bool visible(vec normal,POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2);
 
+float calcTforIntersect(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
 
 
 
@@ -211,7 +223,6 @@ void mouse(int button,int state,int x,int y)
             if(!found)
             {
                 polygonPoints.push_back(temp);
-                cout << "NULL" << endl;
             }
         }
     }
@@ -344,6 +355,11 @@ float DotProduct(float x1, float x2, float y1, float y2)
     return x1*x2 + y1*y2;
 }
 
+float DotProduct(vect v1, vect v2)
+{
+    return v1.x * v2.x + v1.y * v2.y;
+}
+
 /** \brief Methode retournant la norme d'un vecteur
  * x1,x2.... coordonnées des points composant le vecteur.
  * \param
@@ -360,13 +376,15 @@ float VectorNorm(float x1, float x2, float y1, float y2)
 void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
 {
     vector<POINT> PS;
+    vector<PointWithCnt> polyPointsInside;
 
     POINT F;
     POINT S;
     POINT I;
 
     cout << "algo stherland hodgman " << endl;
-    for(unsigned int i = 0; i < windowsPoints.size() + 1; i++)
+    polygonPointsWindowed.clear();
+    for(unsigned int i = 0; i < windowsPoints.size(); i++)
     {
         PS.clear();
         for(unsigned int j = 0; j < polygonPoints.size(); j++)
@@ -378,34 +396,69 @@ void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
             }
             else
             {
-                if(cut(S,polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
+                if(cut(windowsNormals[i], S, polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
                 {
                     cout << "cut" << endl;
-                    I = intersect(S, polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
+                    I = intersect(windowsNormals[i], S, polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
                     PS.push_back(I);
                 }
             }
             S = polygonPoints[j];
             if(visible(windowsNormals[i], S, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
             {
-                cout << "visible" << endl;
-                PS.push_back(S);
+                //PS.push_back(S);
+                addSpecialPoint(polyPointsInside, S);
             }
         }
         if(PS.size() > 0)
         {
-            if(cut(S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
+            if(cut(windowsNormals[i], S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
             {
-                I = intersect(S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
+                I = intersect(windowsNormals[i], S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
                 PS.push_back(I);
             }
+<<<<<<< HEAD
 
             polygonPointsWindowed = PS;
+=======
+            for (int numP = 0; numP < PS.size(); numP++)
+                polygonPointsWindowed.push_back(PS[numP]);
+>>>>>>> [Upd] Correction de cut, Visible et Intersec
         }
+        for (int numP = 0; numP < polyPointsInside.size(); numP++)
+        {
+            if (polyPointsInside[numP].nb == windowsPoints.size())
+            {
+                polygonPointsWindowed.push_back(polyPointsInside[numP].p);
+            }
+        }
+
+    }
+}
+
+void addSpecialPoint(vector<PointWithCnt> &points, POINT p)
+{
+    bool found = false;
+    for (int i = 0; i < points.size(); i++)
+    {
+        if (p.x == points[i].p.x && p.y == points[i].p.y)
+        {
+            found = true;
+            points[i].nb += 1;
+            break;
+        }
+    }
+    if (!found)
+    {
+        PointWithCnt newP;
+        newP.p = p;
+        newP.nb = 1;
+        points.push_back(newP);
     }
 }
 
 //Retourne un booléen suivant l'intersection possible entre le côté [currentPolyPoint otherPolyPoint] du polygone et le bord prolongé (une droite) (windowPoint1 windowPoint2) de la fenêtre.
+/*
 bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
     cout << "in cut" << endl;
@@ -442,7 +495,20 @@ bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT
 
     return false;
 }
+*/
 
+bool cut(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
+{
+    float t;
+
+    t = calcTforIntersect(normal, currentPolyPoint, otherPolyPoint, windowPoint1, windowPoint2);
+    if (t >= 0 && t <= 1)
+        return true;
+    else
+        return false;
+}
+
+/*
 //retournant le point d'intersection [[currentPolyPoint otherPolyPoint] inter (windowPoint1 windowPoint2)
 POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
 {
@@ -489,31 +555,71 @@ POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1
 //    return p;
 
 }
+*/
 
-//Retourne un booléen si S est visible par rapport à (windowPoint1 windowPoint2
-bool visible(vec normal, POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2)
+float calcTforIntersect(vec normal, POINT A, POINT B, POINT Pi, POINT Pi1)
 {
-    POINT normalVector;
-    normalVector.x = normal.x2 - normal.x1;
-    normalVector.y = normal.y2 - normal.y1;
+    vect D;
+    D.x = B.x - A.x;
+    D.y = B.y - A.y;
 
-    POINT pointToWindowVector;
-    pointToWindowVector.x = currentPolyPoint.x - windowPoint1.x;
-    pointToWindowVector.y = currentPolyPoint.y - windowPoint1.y;
+    vect W;
+    W.x = A.x - Pi.x;
+    W.y = A.y - Pi.y;
 
+    vect ni;
+    ni.x = normal.x2 - normal.x1;
+    ni.y = normal.y2 - normal.y1;
 
-    cout << "dot product : " << DotProduct(normalVector.x, pointToWindowVector.x, normalVector.y, pointToWindowVector.y) << endl;
-
-    if(0 <= DotProduct(normalVector.x, pointToWindowVector.x, normalVector.y, pointToWindowVector.y))
-    {
-        return true;
-    }
-    else
-        return false;
+    float t = -1;
+    float DdotNi = DotProduct(D, ni);
+    if (DdotNi != 0)
+        t = -(DotProduct(W, ni)) / DotProduct(D, ni);
+    return t;
 }
 
 
+POINT intersect(vec normal, POINT A, POINT B, POINT Pi, POINT Pi1)
+{
+    // [AB] : Q(t) = (1 - t)A + tB, 0 <= t <= 1
+    float t;
+    float Qt;
 
+    t = calcTforIntersect(normal, A, B, Pi, Pi1);
+
+    POINT I;
+    POINT tmpA, tmpB;
+    tmpA.x = (1 - t) * A.x;
+    tmpA.y = (1 - t) * A.y;
+
+    tmpB.x = t * B.x;
+    tmpB.y = t * B.y;
+
+    I.x = tmpA.x + tmpB.x;
+    I.y = tmpA.y + tmpB.y;
+
+    return I;
+}
+
+
+//Retourne un booléen si S est visible par rapport à (windowPoint1 windowPoint2
+
+bool visible(vec normal, POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2)
+{
+    vect ni;
+    ni.x = normal.x2 - normal.x1;
+    ni.y = normal.y2 - normal.y1;
+
+    vect FiPi;
+    FiPi.x = currentPolyPoint.x - windowPoint1.x;
+    FiPi.y = currentPolyPoint.y - windowPoint1.y;
+
+
+    if(0 <= DotProduct(ni, FiPi))
+        return true;
+    else
+        return false;
+}
 
 
 
