@@ -6,69 +6,56 @@
 #include <iostream>
 #include <math.h>
 
+#include "./include/Point.h"
+#include "./include/Vecteur.h"
+
 using namespace std;
 
 double c;
 bool drawPoly;
 bool drawingNormals;
 
-
-struct vec {
-    float x1;
-    float y1;
-    float x2;
-    float y2;
-};
-
-struct vect {
-    float x;
-    float y;
-};
-
 struct PointWithCnt {
-    POINT p;
+    Point p;
     int nb;
 };
 
-vector<POINT> windowsPoints;
-vector<POINT> polygonPoints;
+vector<Point> windowsPoints;
+vector<Point> polygonPoints;
 
-vector<POINT> polygonPointsWindowed;
+vector<Point> polygonPointsWindowed;
 
-vector<vec> windowsNormals;
+vector<Vecteur> windowsNormals;
 
 void init(int argc, char **argv);
-bool isClockwise(vector<POINT>);
+bool isClockwise(vector<Point>);
 void display();
 void keyboard(unsigned char button, int x, int y);
 void mouse(int mouseButton, int state, int x, int y);
-void VectorNormal(vector<POINT> polygonPoints);
-void drawPoints(vector<POINT> pointVector);
-bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p);
+void VectorNormal(vector<Point> polygonPoints);
+void drawPoints(vector<Point> pointVector);
+bool findPoint(int x, int y, vector<Point> pointVector, Point& p);
 float VectorNorm(float x1, float x2, float y1, float y2);
 
-float DotProduct(vect v1, vect v2);
-float DotProduct(float x1, float x2, float y1, float y2);
-void drawNormals(vector<vec> normals);
+void drawNormals(vector<Vecteur> normals);
 
 // Ajoute ou retire le point p à la liste points
-void addSpecialPoint(vector<PointWithCnt> &points, POINT p);
+void addSpecialPoint(vector<PointWithCnt> &points, Point p);
 
 //Algo sutherland-Hodgman
-void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints);
+void SutherlandHodgman(vector<Point> polygonPoints, vector<Point> windowsPoints);
 
 
 //Retourne un booléen suivant l'intersection possible entre le côté [currentPolyPoint otherPolyPoint] du polygone et le bord prolongé (une droite) (windowPoint1 windowPoint2) de la fenêtre.
-bool cut(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
+bool cut(float t);
 
 //retournant le point d'intersection [[currentPolyPoint otherPolyPoint] inter (windowPoint1 windowPoint2)
-POINT intersect(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
+Point intersect(float t, Point currentPolyPoint, Point otherPolyPoint);
 
 //Retourne un booléen si S est visible par rapport à (windowPoint1 windowPoint2
-bool visible(vec normal,POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2);
+bool visible(Vecteur normal,Point currentPolyPoint, Point windowPoint1, Point windowPoint2);
 
-float calcTforIntersect(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2);
-
+float calcTforIntersect(Vecteur normal, Point currentPolyPoint, Point otherPolyPoint, Point windowPoint1, Point windowPoint2);
 
 
 int main (int argc, char **argv)
@@ -105,15 +92,15 @@ void init(int argc, char **argv)
 /**
 * This function returns true if [poly] is clockwise
 */
-bool isClockwise(vector<POINT> poly)
+bool isClockwise(vector<Point> poly)
 {
     int sum = 0;
     for(unsigned int i = 0; i < poly.size(); i++)
     {
-        int x1 = poly[i].x;
-        int y1 = poly[i].y;
-        int x2 = poly[(i + 1) % poly.size()].x;
-        int y2 = poly[(i + 1) % poly.size()].y;
+        int x1 = poly[i].GetX();
+        int y1 = poly[i].GetY();
+        int x2 = poly[(i + 1) % poly.size()].GetX();
+        int y2 = poly[(i + 1) % poly.size()].GetY();
 
         sum += (x2-x1)*(y2+y1);
     }
@@ -129,31 +116,27 @@ void display()
 
     if(windowsPoints.size() > 1)
     {
-        for(unsigned int i = 1; i < windowsPoints.size(); i++)
+        for(unsigned int i = 0; i < windowsPoints.size(); i++)
         {
             glBegin(GL_LINES);
-            glVertex2i(windowsPoints[i-1].x, windowsPoints[i-1].y);
-            glVertex2i(windowsPoints[i].x, windowsPoints[i].y);
+            glVertex2i(windowsPoints[i].GetX(), windowsPoints[i].GetY());
+            glVertex2i(windowsPoints[(i + 1) % windowsPoints.size()].GetX(), windowsPoints[(i + 1) % windowsPoints.size()].GetY());
             glEnd();
         }
-        glBegin(GL_LINES);
-        glVertex2i(windowsPoints[windowsPoints.size()-1].x, windowsPoints[windowsPoints.size()-1].y);
-        glVertex2i(windowsPoints[0].x, windowsPoints[0].y);
-        glEnd();
     }
 
     glColor3f(0.0, 1.0, 0.0);
     drawPoints(polygonPoints);
     if(polygonPoints.size() > 1)
     {
-        POINT pt1, pt2;
+        Point pt1, pt2;
         for(unsigned int i = 0; i < polygonPoints.size(); i++)
         {
             pt1 = polygonPoints[i];
             pt2 = polygonPoints[(i + 1) % polygonPoints.size()];
             glBegin(GL_LINES);
-            glVertex2i(pt1.x, pt1.y);
-            glVertex2i(pt2.x, pt2.y);
+            glVertex2i(pt1.GetX(), pt1.GetY());
+            glVertex2i(pt2.GetX(), pt2.GetY());
             glEnd();
         }
     }
@@ -164,7 +147,7 @@ void display()
     drawPoints(polygonPointsWindowed);
     if(polygonPointsWindowed.size() > 1)
     {
-        POINT pt1, pt2;
+        Point pt1, pt2;
 
         cout << "size : " << polygonPointsWindowed.size() << endl;
 
@@ -173,8 +156,8 @@ void display()
             pt1 = polygonPointsWindowed[i];
             pt2 = polygonPointsWindowed[(i + 1) % polygonPointsWindowed.size()];
             glBegin(GL_LINES);
-            glVertex2i(pt1.x, pt1.y);
-            glVertex2i(pt2.x, pt2.y);
+            glVertex2i(pt1.GetX(), pt1.GetY());
+            glVertex2i(pt2.GetX(), pt2.GetY());
             glEnd();
         }
     }
@@ -191,9 +174,7 @@ void mouse(int button,int state,int x,int y)
 {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
     {
-        POINT temp;
-        temp.x = x - 250;
-        temp.y = -y + 250;
+        Point temp(x - 250, -y + 250);
         if(drawPoly)
             polygonPoints.push_back(temp);
         else
@@ -218,7 +199,7 @@ void mouse(int button,int state,int x,int y)
     {
         if(drawPoly)
         {
-            POINT temp;
+            Point temp;
             bool found = findPoint(x - 250, -y + 250, polygonPoints, temp);
             if(!found)
             {
@@ -255,7 +236,7 @@ void keyboard(unsigned char touche,int x,int y)
 //			break;
 
 //		case 's':/* affichage en mode sommets seuls*/
-//			glPolygonMode(GL_FRONT_AND_BACK,GL_POINT);
+//			glPolygonMode(GL_FRONT_AND_BACK,GL_Point);
 //			glutPostRedisplay();
 //			break;
 
@@ -265,47 +246,70 @@ void keyboard(unsigned char touche,int x,int y)
 }
 
 
-void drawPoints(vector<POINT> pointVector)
+void drawPoints(vector<Point> pointVector)
 {
     glBegin(GL_POINTS);
     for(unsigned int i = 0; i < pointVector.size(); i++)
     {
-        glVertex2i(pointVector[i].x, pointVector[i].y);
+        glVertex2i(pointVector[i].GetX(), pointVector[i].GetY());
     }
     glEnd();
 }
 
-void drawNormals(vector<vec> normals)
+void drawNormals(vector<Vecteur> normals)
 {
     glColor3f(1.0,1.0,0.0);
     for(unsigned int i = 0; i < normals.size(); i++)
     {
         glBegin(GL_POINTS);
-        glVertex2i(normals[i].x1,normals[i].y1);
-        glVertex2i(normals[i].x2, normals[i].y2);
+        glVertex2i(normals[i].GetPtOrigin().GetX(), normals[i].GetPtOrigin().GetY());
+        glVertex2i(normals[i].GetPtEnd().GetX(), normals[i].GetPtEnd().GetY());
         glEnd();
 
         glBegin(GL_LINES);
-        glVertex2i(normals[i].x1,normals[i].y1);
-        glVertex2i(normals[i].x2,normals[i].y2);
+        glVertex2i(normals[i].GetPtOrigin().GetX(), normals[i].GetPtOrigin().GetY());
+        glVertex2i(normals[i].GetPtEnd().GetX(), normals[i].GetPtEnd().GetY());
         glEnd();
     }
 }
 
 
-bool findPoint(int x, int y, vector<POINT> pointVector, POINT& p)
+//void sortPointsByDistance(vector<Point> &points)
+//{
+//    for (int currentP = 0; currentP < points.size() - 1; currentP++)
+//    {
+//        int min = 99999999;
+//        int indexMin = 0;
+//        for (int nextP = currentP + 1; nextP < points.size(); nextP++)
+//        {
+//            Vecteur pi_pi1(points[currentP], points[nextP]);
+//            float norm = pi_pi1.Norm();
+//
+//            if (norm < min)
+//            {
+//                min = norm;
+//                indexMin = nextP;
+//            }
+//        }
+//        Point tmp = points[currentP + 1];
+//        points[currentP + 1] = points[indexMin];
+//        points[indexMin] = tmp;
+//    }
+//}
+
+bool findPoint(int x, int y, vector<Point> pointVector, Point& p)
 {
     return false;
 }
 
-void VectorNormal(vector<POINT> polygonPoints)
+void VectorNormal(vector<Point> polygonPoints)
 {
     bool clockwise = isClockwise(polygonPoints);
     float X, Y, vectorNormalY, vectorNormalX;
 
     float norm;
 
-    POINT pt1, pt2;
+    Point pt1, pt2;
 
     windowsNormals.clear();
 
@@ -314,129 +318,91 @@ void VectorNormal(vector<POINT> polygonPoints)
         pt1 = polygonPoints[i];
         pt2 = polygonPoints[(i + 1) % polygonPoints.size()];
 
-        Y = pt1.y + ((pt2.y)-(pt1.y))*0.5;
-        X = pt1.x + ((pt2.x)-(pt1.x))*0.5;
+        Y = pt1.GetY() + (pt2.GetY()- pt1.GetY())*0.5;
+        X = pt1.GetX() + (pt2.GetX()- pt1.GetX())*0.5;
 
         if(clockwise)
         {
-            vectorNormalX = ((pt2.y)-(pt1.y));
-            vectorNormalY = (-((pt2.x)-(pt1.x)));
+            vectorNormalX = pt2.GetY() - pt1.GetY();
+            vectorNormalY = -(pt2.GetX()-pt1.GetX());
         }
         else
         {
-            vectorNormalX = (-((pt2.y)-(pt1.y)));
-            vectorNormalY = ((pt2.x)-(pt1.x));
+            vectorNormalX = - (pt2.GetY() - pt1.GetY());
+            vectorNormalY =  pt2.GetX() - pt1.GetX();
         }
 
-        norm = VectorNorm(vectorNormalX, X, vectorNormalY, Y);
-        vectorNormalX /= norm/10;
-        vectorNormalY /= norm/10;
+        Point pA = Point(X, Y);
+        norm = Vecteur(Point(vectorNormalX, vectorNormalY), pA).Norm();
+        vectorNormalX /= norm / 10;
+        vectorNormalY /= norm / 10;
 
-        vec temp;
-        temp.x1 = X;
-        temp.y1 = Y;
-        temp.x2 = X + vectorNormalX;
-        temp.y2 = Y + vectorNormalY;
+        Point pB = Point(X + vectorNormalX, Y + vectorNormalY);
 
-        windowsNormals.push_back(temp);
+        Vecteur v(pA, pB);
+
+        windowsNormals.push_back(v);
     }
 }
 
-
-/** \brief Produit Scalaire
- * x1,x2.. ne sont pas les coordonnées de point, mais les valeurs du vecteur!
- * \param
- * \param
- * \return
- *
- */
-float DotProduct(float x1, float x2, float y1, float y2)
-{
-    return x1*x2 + y1*y2;
-}
-
-float DotProduct(vect v1, vect v2)
-{
-    return v1.x * v2.x + v1.y * v2.y;
-}
-
-/** \brief Methode retournant la norme d'un vecteur
- * x1,x2.... coordonnées des points composant le vecteur.
- * \param
- * \param
- * \return
- *
- */
-float VectorNorm(float x1, float x2, float y1, float y2)
-{
-    return sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
-}
-
 //Algo sutherland-Hodgman
-void SutherlandHodgman(vector<POINT> polygonPoints, vector<POINT> windowsPoints)
+void SutherlandHodgman(vector<Point> polygonPoints, vector<Point> windowsPoints)
 {
-    vector<POINT> PS;
+    vector<Point> PS;
     vector<PointWithCnt> polyPointsInside;
 
-    POINT F;
-    POINT S;
-    POINT I;
+    Point F;
+    Point S;
+    Point I;
 
     cout << "algo stherland hodgman " << endl;
     polygonPointsWindowed.clear();
+    polygonPointsWindowed = polygonPoints;
     for(unsigned int i = 0; i < windowsPoints.size(); i++)
     {
         PS.clear();
-        for(unsigned int j = 0; j < polygonPoints.size(); j++)
+        for(unsigned int j = 0; j < polygonPointsWindowed.size(); j++)
         {
             cout << "i : " << i << ", j : " << j << endl;
             if(j == 0)
             {
-                F = polygonPoints[j];
+                F = polygonPointsWindowed[j];
             }
             else
             {
-                if(cut(windowsNormals[i], S, polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
+                float t = calcTforIntersect(windowsNormals[i], S, polygonPointsWindowed[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
+                if(cut(t))
                 {
                     cout << "cut" << endl;
-                    I = intersect(windowsNormals[i], S, polygonPoints[j], windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
+                    I = intersect(t, S, polygonPointsWindowed[j]);
                     PS.push_back(I);
                 }
             }
-            S = polygonPoints[j];
+            S = polygonPointsWindowed[j];
             if(visible(windowsNormals[i], S, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
             {
-                //PS.push_back(S);
-                addSpecialPoint(polyPointsInside, S);
+                PS.push_back(S);
             }
         }
         if(PS.size() > 0)
         {
-            if(cut(windowsNormals[i], S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]))
+            float t = calcTforIntersect(windowsNormals[i], S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
+            if(cut(t))
             {
-                I = intersect(windowsNormals[i], S, F, windowsPoints[i], windowsPoints[(i + 1) % windowsPoints.size()]);
+                I = intersect(t, S, F);
                 PS.push_back(I);
             }
-            for (int numP = 0; numP < PS.size(); numP++)
-                polygonPointsWindowed.push_back(PS[numP]);
         }
-        for (int numP = 0; numP < polyPointsInside.size(); numP++)
-        {
-            if (polyPointsInside[numP].nb == windowsPoints.size())
-            {
-                polygonPointsWindowed.push_back(polyPointsInside[numP].p);
-            }
-        }
-
+        polygonPointsWindowed = PS;
     }
 }
 
-void addSpecialPoint(vector<PointWithCnt> &points, POINT p)
+void addSpecialPoint(vector<PointWithCnt> &points, Point p)
 {
     bool found = false;
     for (int i = 0; i < points.size(); i++)
     {
-        if (p.x == points[i].p.x && p.y == points[i].p.y)
+        if (p.GetX() == points[i].p.GetX() && p.GetY() == points[i].p.GetY())
         {
             found = true;
             points[i].nb += 1;
@@ -453,145 +419,37 @@ void addSpecialPoint(vector<PointWithCnt> &points, POINT p)
 }
 
 //Retourne un booléen suivant l'intersection possible entre le côté [currentPolyPoint otherPolyPoint] du polygone et le bord prolongé (une droite) (windowPoint1 windowPoint2) de la fenêtre.
-/*
-bool cut(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
+bool cut(float t)
 {
-    cout << "in cut" << endl;
-
-    float a1, a2, b1, b2, commun;
-
-    a1 = (otherPolyPoint.y - currentPolyPoint.y) / (otherPolyPoint.x - currentPolyPoint.x);
-    a2 = (windowPoint2.y - windowPoint1.y) / (windowPoint2.x - windowPoint1.x);
-
-    b1 = currentPolyPoint.y - (a1 * currentPolyPoint.x);
-    b2 = windowPoint1.y - (a2 * windowPoint1.x);
-
-
-    if(a1 != a2)
-    {
-        cout << "a1 ! a2" << endl;
-        commun = (b2-b1)/(a1-a2);
-        cout << "x1 = " << currentPolyPoint.x << " x2 = " << otherPolyPoint.x << " commun = " << commun << endl;
-
-        if(currentPolyPoint.x < otherPolyPoint.x)
-            if((currentPolyPoint.x <= commun && commun <= otherPolyPoint.x))
-            {
-                cout << "commun1" << endl;
-                return true;
-            }
-        else
-            if((otherPolyPoint.x <= commun && commun <= currentPolyPoint.x))
-            {
-                cout << "commun2" << endl;
-                return true;
-            }
-
-    }
-
-    return false;
-}
-*/
-
-bool cut(vec normal, POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
-{
-    float t;
-
-    t = calcTforIntersect(normal, currentPolyPoint, otherPolyPoint, windowPoint1, windowPoint2);
     if (t >= 0 && t <= 1)
         return true;
     else
         return false;
 }
 
-/*
-//retournant le point d'intersection [[currentPolyPoint otherPolyPoint] inter (windowPoint1 windowPoint2)
-POINT intersect(POINT currentPolyPoint, POINT otherPolyPoint, POINT windowPoint1, POINT windowPoint2)
+float calcTforIntersect(Vecteur ni, Point A, Point B, Point Pi, Point Pi1)
 {
-    cout << "intersect" << endl;
-    POINT p;
-    float a1, a2, b1, b2, X, Y;
+    Vecteur D = Vecteur(A, B);
 
-    a1 = (otherPolyPoint.y - currentPolyPoint.y) / (otherPolyPoint.x - currentPolyPoint.x);
-    a2 = (windowPoint1.y - windowPoint2.y) / (windowPoint1.x - windowPoint2.x);
-    b1 = currentPolyPoint.y - (a1 * currentPolyPoint.x);
-    b2 = windowPoint1.y - (a2 * windowPoint1.x);
-    X = (b2-b1)/(a1-a2);
-
-
-    Y = a1 * X + b1 ;
-
-    p.x = X;
-    p.y = Y;
-
-    return p;
-//
-//    float mA, mB, mC, mD, iA, iB, iC, iD, multi, xB, yB;
-//
-//
-//
-//    mA = otherPolyPoint.x - currentPolyPoint.x;
-//    mB = windowPoint1.x - windowPoint2.x;
-//    mC = otherPolyPoint.y - currentPolyPoint.y;
-//    mD = windowPoint1.y - windowPoint2.y;
-//
-//    xB = windowPoint1.x - currentPolyPoint.x;
-//    yB = windowPoint1.y - currentPolyPoint.y;
-//
-//    multi =1 /( (mA * mD) - (mB * mC));
-//
-//    iA = mD * multi;
-//    iB = -mB * multi;
-//    iC = -mC * multi;
-//    iD = mA * multi;
-//
-//    p.x = iA* xB + iB * yB;
-//    p.y = iC * xB + iD * yB;
-//
-//    return p;
-
-}
-*/
-
-float calcTforIntersect(vec normal, POINT A, POINT B, POINT Pi, POINT Pi1)
-{
-    vect D;
-    D.x = B.x - A.x;
-    D.y = B.y - A.y;
-
-    vect W;
-    W.x = A.x - Pi.x;
-    W.y = A.y - Pi.y;
-
-    vect ni;
-    ni.x = normal.x2 - normal.x1;
-    ni.y = normal.y2 - normal.y1;
+    Vecteur W = Vecteur(Pi, A);
 
     float t = -1;
-    float DdotNi = DotProduct(D, ni);
+    float DdotNi = D.DotProduct(ni);
     if (DdotNi != 0)
-        t = -(DotProduct(W, ni)) / DotProduct(D, ni);
+        t = - W.DotProduct(ni) / DdotNi;
     return t;
 }
 
 
-POINT intersect(vec normal, POINT A, POINT B, POINT Pi, POINT Pi1)
+Point intersect(float t, Point A, Point B)
 {
     // [AB] : Q(t) = (1 - t)A + tB, 0 <= t <= 1
-    float t;
-    float Qt;
 
-    t = calcTforIntersect(normal, A, B, Pi, Pi1);
+    Point I;
+    Point tmpA = Point((1 - t) * A.GetX(), (1 - t) * A.GetY());
+    Point tmpB = Point(t * B.GetX(), t * B.GetY());
 
-    POINT I;
-    POINT tmpA, tmpB;
-    tmpA.x = (1 - t) * A.x;
-    tmpA.y = (1 - t) * A.y;
-
-    tmpB.x = t * B.x;
-    tmpB.y = t * B.y;
-
-    I.x = tmpA.x + tmpB.x;
-    I.y = tmpA.y + tmpB.y;
+    I = tmpA + tmpB;
 
     return I;
 }
@@ -599,18 +457,11 @@ POINT intersect(vec normal, POINT A, POINT B, POINT Pi, POINT Pi1)
 
 //Retourne un booléen si S est visible par rapport à (windowPoint1 windowPoint2
 
-bool visible(vec normal, POINT currentPolyPoint, POINT windowPoint1, POINT windowPoint2)
+bool visible(Vecteur ni, Point currentPolyPoint, Point windowPoint1, Point windowPoint2)
 {
-    vect ni;
-    ni.x = normal.x2 - normal.x1;
-    ni.y = normal.y2 - normal.y1;
+    Vecteur FiPi(windowPoint1, currentPolyPoint);
 
-    vect FiPi;
-    FiPi.x = currentPolyPoint.x - windowPoint1.x;
-    FiPi.y = currentPolyPoint.y - windowPoint1.y;
-
-
-    if(0 <= DotProduct(ni, FiPi))
+    if(0 <= FiPi.DotProduct(ni))
         return true;
     else
         return false;

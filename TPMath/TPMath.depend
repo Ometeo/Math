@@ -257,7 +257,7 @@
 	<GL/gl.h>
 	<GL/glu.h>
 
-1388712696 source:c:\users\thierry\documents\github\math\tpmath\main.cpp
+1389025642 source:c:\users\thierry\documents\github\math\tpmath\main.cpp
 	<windows.h>
 	<GL/glut.h>
 	<stdlib.h>
@@ -265,4 +265,19 @@
 	<vector>
 	<iostream>
 	<math.h>
+	"./include/Point.h"
+	"./include/Vecteur.h"
+
+1389015635 source:c:\users\thierry\documents\github\math\tpmath\src\point.cpp
+	"../include/Point.h"
+
+1389015572 c:\users\thierry\documents\github\math\tpmath\include\point.h
+
+1389015798 source:c:\users\thierry\documents\github\math\tpmath\src\vecteur.cpp
+	<math.h>
+	"../include/Vecteur.h"
+	"../include/Point.h"
+
+1389015761 c:\users\thierry\documents\github\math\tpmath\include\vecteur.h
+	"./Point.h"
 
