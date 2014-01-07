@@ -17,7 +17,6 @@ bool drawingNormals;
 
 vector<Point> windowsPoints;
 vector<Point> polygonPoints;
-
 vector<Point> polygonPointsWindowed;
 
 vector<Vecteur> windowsNormals;
@@ -49,6 +48,20 @@ bool visible(Vecteur normal,Point currentPolyPoint, Point windowPoint1, Point wi
 
 float calcTforIntersect(Vecteur normal, Point currentPolyPoint, Point otherPolyPoint, Point windowPoint1, Point windowPoint2);
 
+//Remove all the windows points
+void clearWindows();
+
+//Remove all the polygon points
+void clearPolygon();
+
+//Remove all the cliped polygon points
+void clearClipping();
+
+//Clear all the data
+void clearAll();
+
+// Cancel the last point
+void cancelPoint();
 
 int main (int argc, char **argv)
 {
@@ -154,9 +167,6 @@ void display()
         }
     }
 
-
-
-
 //    cout << "polygon isClockwise : " << isClockwise(windowsPoints) << endl;
 
     glFlush();
@@ -173,16 +183,10 @@ void mouse(int button,int state,int x,int y)
         {
             windowsPoints.push_back(temp);
             if(windowsPoints.size() > 2)
-            {
                 VectorNormal(windowsPoints);
-            }
         }
 
-        if(polygonPoints.size() > 1 && windowsPoints.size() > 2)
-        {
-            SutherlandHodgman(polygonPoints, windowsPoints);
-        }
-
+        SutherlandHodgman(polygonPoints, windowsPoints);
 
         display();
     }
@@ -205,35 +209,33 @@ void keyboard(unsigned char touche,int x,int y)
 {
     switch (touche)
     {
-    case 'w':
-        drawPoly = false;
+        case 8:
+            cancelPoint();
         break;
-    case 'p':
-        drawPoly = true;
-        break;
-    case 'n':
-        drawingNormals = !drawingNormals;
-        display();
-        break;
-
-
-//		case 'p':/* affichage du carré plein*/
-//			glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
-//			glutPostRedisplay();     // permet l'affichage
-//			break;
-
-//		case 'f':/* affichage en mode fil de fer*/
-//			glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
-//			glutPostRedisplay();
-//			break;
-
-//		case 's':/* affichage en mode sommets seuls*/
-//			glPolygonMode(GL_FRONT_AND_BACK,GL_Point);
-//			glutPostRedisplay();
-//			break;
-
-    case 'q':/* Quitter le programme */
-        exit(0);
+        case 'w':
+            drawPoly = false;
+            break;
+        case 'p':
+            drawPoly = true;
+            break;
+        case 'n':
+            drawingNormals = !drawingNormals;
+            display();
+            break;
+        case 'W':
+            clearWindows();
+            break;
+        case 'P':
+            clearPolygon();
+            break;
+        case 'C':
+            clearClipping();
+            break;
+        case 'c':
+            clearAll();
+            break;
+        case 'q':/* Quitter le programme */
+            exit(0);
     }
 }
 
@@ -348,6 +350,9 @@ void SutherlandHodgman(vector<Point> polygonPoints, vector<Point> windowsPoints)
 
     cout << "algo stherland hodgman " << endl;
     polygonPointsWindowed.clear();
+    if (windowsPoints.size() < 3 || polygonPoints.size() < 1)
+        return;
+
     polygonPointsWindowed = polygonPoints;
     for(unsigned int i = 0; i < windowsPoints.size(); i++)
     {
@@ -438,5 +443,43 @@ bool visible(Vecteur ni, Point currentPolyPoint, Point windowPoint1, Point windo
         return false;
 }
 
+//Remove all the windows points
+void clearWindows()
+{
+    windowsNormals.clear();
+    windowsPoints.clear();
+    display();
+}
 
+//Remove all the polygon points
+void clearPolygon()
+{
+    polygonPoints.clear();
+    display();
+}
 
+//Remove all the cliped polygon points
+void clearClipping()
+{
+    polygonPointsWindowed.clear();
+    display();
+}
+
+//Clear all the data
+void clearAll()
+{
+    clearClipping();
+    clearPolygon();
+    clearWindows();
+    display();
+}
+
+void cancelPoint()
+{
+    if (drawPoly)
+        polygonPoints.pop_back();
+    else
+        windowsPoints.pop_back();
+    SutherlandHodgman(polygonPoints, windowsPoints);
+    display();
+}

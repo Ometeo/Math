@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
-	<File name="include\Point.h" open="1" top="0" tabpos="2">
-		<Cursor position="401" topLine="0" />
+	<File name="src\Point.cpp" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="33" topLine="0" />
+		</Cursor>
 	</File>
-	<File name="include\Vecteur.h" open="1" top="0" tabpos="4">
-		<Cursor position="588" topLine="0" />
+	<File name="src\Vecteur.cpp" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="0" topLine="0" />
+		</Cursor>
 	</File>
-	<File name="main.cpp" open="1" top="1" tabpos="1">
-		<Cursor position="11570" topLine="407" />
+	<File name="main.cpp" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="-1" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5264" topLine="205" />
+		</Cursor>
 	</File>
-	<File name="src\Point.cpp" open="1" top="0" tabpos="3">
-		<Cursor position="291" topLine="0" />
+	<File name="include\Point.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="85" topLine="0" />
+		</Cursor>
 	</File>
-	<File name="src\Vecteur.cpp" open="1" top="0" tabpos="5">
-		<Cursor position="17" topLine="0" />
+	<File name="include\Vecteur.h" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="410" topLine="0" />
+		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

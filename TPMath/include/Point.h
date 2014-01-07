@@ -9,8 +9,9 @@ class Point
         float _y;
 
     public:
-        Point();
+        Point(){ _x = 0; _y = 0; }
         Point(float x, float y) { _x = x; _y = y; }
+        Point(const Point &p) { _x = p.GetX(); _y = p.GetY(); }
         virtual ~Point();
         float GetX() const { return _x; }
         float GetY() const { return _y; }
