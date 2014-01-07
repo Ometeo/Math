@@ -16,6 +16,7 @@ class Point
         float GetY() const { return _y; }
         void SetX(float x) { _x = x; }
         void SetY(float y) { _y = y; }
+        void SetCoord(int x, int y) { SetX(x); SetY(y); }
 
         void Translate(const Point &p);
         Point operator-(const Point& p);

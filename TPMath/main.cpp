@@ -15,11 +15,6 @@ double c;
 bool drawPoly;
 bool drawingNormals;
 
-struct PointWithCnt {
-    Point p;
-    int nb;
-};
-
 vector<Point> windowsPoints;
 vector<Point> polygonPoints;
 
@@ -38,9 +33,6 @@ bool findPoint(int x, int y, vector<Point> pointVector, Point& p);
 float VectorNorm(float x1, float x2, float y1, float y2);
 
 void drawNormals(vector<Vecteur> normals);
-
-// Ajoute ou retire le point p à la liste points
-void addSpecialPoint(vector<PointWithCnt> &points, Point p);
 
 //Algo sutherland-Hodgman
 void SutherlandHodgman(vector<Point> polygonPoints, vector<Point> windowsPoints);
@@ -349,7 +341,6 @@ void VectorNormal(vector<Point> polygonPoints)
 void SutherlandHodgman(vector<Point> polygonPoints, vector<Point> windowsPoints)
 {
     vector<Point> PS;
-    vector<PointWithCnt> polyPointsInside;
 
     Point F;
     Point S;
@@ -397,26 +388,6 @@ void SutherlandHodgman(vector<Point> polygonPoints, vector<Point> windowsPoints)
     }
 }
 
-void addSpecialPoint(vector<PointWithCnt> &points, Point p)
-{
-    bool found = false;
-    for (int i = 0; i < points.size(); i++)
-    {
-        if (p.GetX() == points[i].p.GetX() && p.GetY() == points[i].p.GetY())
-        {
-            found = true;
-            points[i].nb += 1;
-            break;
-        }
-    }
-    if (!found)
-    {
-        PointWithCnt newP;
-        newP.p = p;
-        newP.nb = 1;
-        points.push_back(newP);
-    }
-}
 
 //Retourne un booléen suivant l'intersection possible entre le côté [currentPolyPoint otherPolyPoint] du polygone et le bord prolongé (une droite) (windowPoint1 windowPoint2) de la fenêtre.
 bool cut(float t)
